@@ -41,11 +41,24 @@ class FmFtp : Source() {
 
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
         if (query.isNotBlank()) {
-            val response = client.newCall(GET("$apiBaseUrl/search?search=$query")).execute()
-            val data = json.decodeFromString<List<FmFtpContent>>(response.body.string())
-            val animes = data.sortedByDescending { diceCoefficient(it.title.lowercase(), query.lowercase()) }
-                .map { it.toSAnime() }
-            return AnimesPage(animes, false)
+            // Sanitize query to prevent server-side SQL errors (apostrophes break their API)
+            val sanitizedQuery = query.replace("'", "").replace("\"", "")
+            val response = client.newCall(GET("$apiBaseUrl/search?search=$sanitizedQuery")).execute()
+            val bodyString = response.body.string()
+            
+            // Handle error response gracefully
+            if (bodyString.contains("\"success\":false")) {
+                return AnimesPage(emptyList(), false)
+            }
+
+            return try {
+                val data = json.decodeFromString<List<FmFtpContent>>(bodyString)
+                val animes = data.sortedByDescending { diceCoefficient(it.title.lowercase(), sanitizedQuery.lowercase()) }
+                    .map { it.toSAnime() }
+                AnimesPage(animes, false)
+            } catch (e: Exception) {
+                AnimesPage(emptyList(), false)
+            }
         }
 
         var libraryId = ""
@@ -122,7 +135,6 @@ class FmFtp : Source() {
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
         val type = episode.url.substringAfter("type=").substringBefore("&")
         val id = episode.url.substringAfter("id=")
-        // Correct types are 'movies' and 'tv_shows' for the stream endpoint
         val videoUrl = "$apiBaseUrl/stream/video/stream?type=$type&id=$id"
         return listOf(Video(videoUrl, "Direct", videoUrl))
     }
