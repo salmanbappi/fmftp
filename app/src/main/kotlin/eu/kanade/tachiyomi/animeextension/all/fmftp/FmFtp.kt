@@ -10,11 +10,8 @@ import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.network.GET
 import extensions.utils.Source
-import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Response
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class FmFtp : Source() {
 
@@ -24,8 +21,6 @@ class FmFtp : Source() {
     override val lang = "all"
     override val supportsLatest = true
     override val id: Long = 7214566391484419847L
-
-    private val json = Injekt.get<Json>()
 
     override val client: OkHttpClient = network.client.newBuilder()
         .addInterceptor { chain ->
@@ -173,4 +168,6 @@ class FmFtp : Source() {
         "Indian Tv Series" to "10",
         "English tv series" to "9"
     ))
+
+    override fun setupPreferenceScreen(screen: androidx.preference.PreferenceScreen) {}
 }
