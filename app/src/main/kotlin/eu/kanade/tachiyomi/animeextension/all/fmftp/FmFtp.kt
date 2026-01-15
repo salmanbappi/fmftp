@@ -101,7 +101,7 @@ class FmFtp : Source() {
         if (type == "MOVIE") {
             return listOf(SEpisode.create().apply {
                 name = "Play Movie"
-                url = anime.url
+                url = "/watch?type=movies&id=$id"
                 episode_number = 1F
             })
         } else {
@@ -109,17 +109,20 @@ class FmFtp : Source() {
             val content = json.decodeFromString<FmFtpContent>(response.body.string())
             return content.episodes?.map { ep ->
                 SEpisode.create().apply {
-                    name = ep.name ?: "Episode ${ep.episode_number}"
-                    url = "/watch?type=EPISODE&id=${ep.id}"
-                    episode_number = ep.episode_number?.toFloat() ?: 0F
+                    val s = ep.season_number ?: 1
+                    val e = ep.episode_number ?: 0
+                    name = "S$s E$e" + (if (ep.name.isNullOrBlank()) "" else " - ${ep.name}")
+                    url = "/watch?type=tv_shows&id=${ep.id}"
+                    episode_number = (s * 1000 + e).toFloat()
                 }
-            }?.reversed() ?: emptyList()
+            }?.sortedByDescending { it.episode_number } ?: emptyList()
         }
     }
 
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
         val type = episode.url.substringAfter("type=").substringBefore("&")
         val id = episode.url.substringAfter("id=")
+        // Correct types are 'movies' and 'tv_shows' for the stream endpoint
         val videoUrl = "$apiBaseUrl/stream/video/stream?type=$type&id=$id"
         return listOf(Video(videoUrl, "Direct", videoUrl))
     }

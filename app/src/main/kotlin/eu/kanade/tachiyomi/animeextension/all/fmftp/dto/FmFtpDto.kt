@@ -38,7 +38,7 @@ data class FmFtpLibrary(
 data class FmFtpEpisode(
     val id: Int,
     val name: String? = null,
-    val season: Int? = null,
+    val season_number: Int? = null,
     val episode_number: Int? = null,
     val runtime: Int? = null,
     val still_path: String? = null,
