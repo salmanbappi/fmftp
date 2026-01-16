@@ -19,7 +19,7 @@ class FmFtp : Source() {
     override val baseUrl = "https://fmftp.net"
     private val apiBaseUrl = "https://fmftp.net/api"
     override val lang = "all"
-    override val supportsLatest = true
+    override val supportsLatest = false
     override val id: Long = 7214566391484419847L
 
     override val client: OkHttpClient = network.client.newBuilder()
@@ -37,7 +37,7 @@ class FmFtp : Source() {
         return parseAnimesPage(response)
     }
 
-    override suspend fun getLatestUpdates(page: Int): AnimesPage = getPopularAnime(page)
+    override suspend fun getLatestUpdates(page: Int): AnimesPage = throw UnsupportedOperationException("Not Used")
 
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
         if (query.isNotBlank()) {
